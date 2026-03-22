@@ -14,6 +14,12 @@ function onYouTubeIframeAPIReady() {
     player = new YT.Player('player', {
         height: '100%',
         width: '100%',
+        playerVars: {
+            'origin': window.location.origin,
+            'enablejsapi': 1,
+            'rel': 0,
+            'modestbranding': 1
+        },
         events: {
             'onReady': onPlayerReady,
             'onStateChange': onPlayerStateChange
@@ -26,11 +32,14 @@ function onPlayerReady(event) {
 }
 
 function onPlayerStateChange(event) {
-    if (!currentRoom) return;
+    if (!currentRoom || !player) return;
     
     const state = event.data;
-    const currentTime = player.getCurrentTime();
+    const currentTime = Math.floor(player.getCurrentTime());
     const videoId = getVideoId();
+    
+    // Only sync if we have a valid video
+    if (!videoId) return;
     
     if (state === YT.PlayerState.PLAYING) {
         socket.emit('video-action', {
@@ -100,6 +109,27 @@ const sendMessageBtn = document.getElementById('send-message');
 const chatMessages = document.getElementById('chat-messages');
 const roomIdDisplay = document.getElementById('room-id');
 const userCountDisplay = document.getElementById('user-count');
+const themeToggle = document.getElementById('theme-toggle');
+
+// Theme functionality
+function initTheme() {
+    const savedTheme = localStorage.getItem('theme') || 'light';
+    document.documentElement.setAttribute('data-theme', savedTheme);
+    updateThemeIcon(savedTheme);
+}
+
+function toggleTheme() {
+    const currentTheme = document.documentElement.getAttribute('data-theme');
+    const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+    
+    document.documentElement.setAttribute('data-theme', newTheme);
+    localStorage.setItem('theme', newTheme);
+    updateThemeIcon(newTheme);
+}
+
+function updateThemeIcon(theme) {
+    themeToggle.textContent = theme === 'dark' ? '☀️' : '🌙';
+}
 
 // Event listeners
 joinRoomBtn.addEventListener('click', () => {
@@ -131,6 +161,8 @@ messageInput.addEventListener('keypress', (e) => {
     }
 });
 
+themeToggle.addEventListener('click', toggleTheme);
+
 // Functions
 function joinRoom(roomId) {
     currentRoom = roomId;
@@ -155,10 +187,22 @@ function getVideoId() {
 }
 
 function loadVideo(videoId, startTime = 0, autoplay = false) {
-    if (player && player.loadVideoById) {
-        player.loadVideoById(videoId, startTime);
-        if (!autoplay) {
-            setTimeout(() => player.pauseVideo(), 100);
+    if (player && player.loadVideoById && videoId) {
+        try {
+            player.loadVideoById({
+                videoId: videoId,
+                startSeconds: startTime
+            });
+            if (!autoplay) {
+                setTimeout(() => {
+                    if (player && player.pauseVideo) {
+                        player.pauseVideo();
+                    }
+                }, 1000);
+            }
+        } catch (error) {
+            console.error('Error loading video:', error);
+            addSystemMessage('Error loading video. Please try again.');
         }
     }
 }
@@ -198,6 +242,7 @@ function updateUserCount(count) {
 
 // Initialize
 window.addEventListener('load', () => {
+    initTheme();
     initSocket();
     joinModal.style.display = 'flex';
 });
