@@ -8,7 +8,13 @@ let bubbleCounter = 0;
 
 // Initialize socket connection
 function initSocket() {
-    socket = io('http://localhost:3001');
+    // Use the current domain for socket connection in production
+    const socketUrl = window.location.hostname === 'localhost' 
+        ? 'http://localhost:3001' 
+        : window.location.origin;
+    
+    console.log('Connecting to socket server:', socketUrl);
+    socket = io(socketUrl);
     setupSocketEvents();
 }
 
@@ -96,8 +102,24 @@ function setupSocketEvents() {
         addSystemMessage(`User left the room`);
     });
 
+    socket.on('user-count-update', (data) => {
+        updateUserCount(data.userCount);
+    });
+
     socket.on('chat-message', (data) => {
         addChatMessage(data.message, data.userId);
+    });
+
+    socket.on('connect', () => {
+        console.log('Connected to server with ID:', socket.id);
+    });
+
+    socket.on('disconnect', () => {
+        console.log('Disconnected from server');
+    });
+
+    socket.on('connect_error', (error) => {
+        console.error('Connection error:', error);
     });
 }
 

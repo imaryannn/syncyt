@@ -16,6 +16,16 @@ const io = socketIo(server, {
 app.use(cors());
 app.use(express.static(path.join(__dirname, '../client')));
 
+// Add a health check endpoint
+app.get('/health', (req, res) => {
+  res.status(200).json({ status: 'OK', timestamp: new Date().toISOString() });
+});
+
+// Serve the main page
+app.get('/', (req, res) => {
+  res.sendFile(path.join(__dirname, '../client/index.html'));
+});
+
 const rooms = new Map();
 
 io.on('connection', (socket) => {
@@ -36,8 +46,9 @@ io.on('connection', (socket) => {
     
     socket.emit('room-state', room.videoState);
     socket.to(roomId).emit('user-joined', { userId: socket.id, userCount: room.users.size });
+    io.to(roomId).emit('user-count-update', { userCount: room.users.size });
     
-    console.log(`User ${socket.id} joined room ${roomId}`);
+    console.log(`User ${socket.id} joined room ${roomId}. Room now has ${room.users.size} users.`);
   });
 
   socket.on('video-action', (data) => {
@@ -47,26 +58,32 @@ io.on('connection', (socket) => {
     if (room) {
       room.videoState = { videoId, currentTime, isPlaying: action === 'play' };
       socket.to(roomId).emit('sync-video', { action, videoId, currentTime });
+      console.log(`Video ${action} in room ${roomId}:`, videoId, 'at', currentTime);
     }
   });
 
   socket.on('chat-message', (data) => {
     const { roomId, message, userId } = data;
+    console.log(`Chat message in room ${roomId} from ${userId}:`, message);
     socket.to(roomId).emit('chat-message', { message, userId });
   });
 
   socket.on('disconnect', () => {
+    console.log('User disconnected:', socket.id);
     rooms.forEach((room, roomId) => {
       if (room.users.has(socket.id)) {
         room.users.delete(socket.id);
         socket.to(roomId).emit('user-left', { userId: socket.id, userCount: room.users.size });
+        io.to(roomId).emit('user-count-update', { userCount: room.users.size });
+        
+        console.log(`User ${socket.id} left room ${roomId}. Room now has ${room.users.size} users.`);
         
         if (room.users.size === 0) {
           rooms.delete(roomId);
+          console.log(`Room ${roomId} deleted (empty)`);
         }
       }
     });
-    console.log('User disconnected:', socket.id);
   });
 });
 
