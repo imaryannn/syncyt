@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Syncyt - Watch Together</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="container">
+        <header class="header">
+            <h1 class="logo">🎬 Syncyt</h1>
+            <div class="room-info">
+                <span id="room-id"></span>
+                <span id="user-count">👥 1</span>
+            </div>
+        </header>
+
+        <div class="main-content">
+            <div class="video-section">
+                <div id="player-container">
+                    <div id="player"></div>
+                </div>
+                
+                <div class="controls">
+                    <input type="text" id="youtube-url" placeholder="Paste YouTube URL here..." />
+                    <button id="load-video">Load Video</button>
+                </div>
+            </div>
+
+            <div class="chat-section">
+                <div class="chat-header">💬 Room Chat</div>
+                <div id="chat-messages"></div>
+                <div class="chat-input">
+                    <input type="text" id="message-input" placeholder="Type a message..." />
+                    <button id="send-message">Send</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="join-modal" class="modal">
+        <div class="modal-content">
+            <h2>Join Syncyt Room</h2>
+            <input type="text" id="room-input" placeholder="Enter room ID or create new" />
+            <button id="join-room">Join Room</button>
+            <button id="create-room">Create New Room</button>
+        </div>
+    </div>
+
+    <script src="https://cdn.socket.io/4.7.4/socket.io.min.js"></script>
+    <script src="script.js"></script>
+    <script src="https://www.youtube.com/iframe_api"></script>
+</body>
+</html>
