@@ -273,35 +273,29 @@ function handleFullscreenChange() {
     
     isFullscreen = !!fullscreenElement;
     console.log('Fullscreen state changed:', isFullscreen);
-    console.log('Fullscreen element:', fullscreenElement);
     
     if (isFullscreen) {
-        console.log('Fullscreen chat overlay activated');
-        
-        // Since the fullscreen element is an iframe, we need to create overlay outside it
-        // but positioned to cover the same area
-        if (!document.querySelector('.syncyt-chat-overlay')) {
-            const overlay = document.createElement('div');
-            overlay.className = 'syncyt-chat-overlay';
-            overlay.style.cssText = `
-                position: fixed !important;
-                top: 0 !important;
-                left: 0 !important;
-                width: 100vw !important;
-                height: 100vh !important;
-                pointer-events: none !important;
-                z-index: 2147483647 !important;
-                background: transparent !important;
-            `;
-            
-            // Add to body, not to iframe
-            document.body.appendChild(overlay);
-            fullscreenChatOverlay = overlay;
-            console.log('Created overlay covering fullscreen area');
-        }
+        console.log('Entered fullscreen mode - chat will use audio/title notifications');
+        // Clear any existing messages queue
+        window.fullscreenMessages = [];
     } else {
-        console.log('Fullscreen chat overlay deactivated and bubbles cleared');
-        // Clean up when exiting fullscreen
+        console.log('Exited fullscreen mode - showing missed messages');
+        
+        // Show any messages that were received during fullscreen
+        if (window.fullscreenMessages && window.fullscreenMessages.length > 0) {
+            console.log(`Showing ${window.fullscreenMessages.length} missed messages`);
+            
+            window.fullscreenMessages.forEach((msg, index) => {
+                setTimeout(() => {
+                    showNormalChatBubble(msg.message, msg.username, msg.isSystem);
+                }, index * 500); // Stagger the messages
+            });
+            
+            // Clear the messages after showing them
+            window.fullscreenMessages = [];
+        }
+        
+        // Clean up any existing overlays
         const existingBubbles = document.querySelectorAll('.chat-bubble');
         existingBubbles.forEach(bubble => {
             if (bubble.parentNode) {
@@ -309,7 +303,7 @@ function handleFullscreenChange() {
             }
         });
         
-        // Remove our overlay
+        // Remove our overlay if it exists
         const overlay = document.querySelector('.syncyt-chat-overlay');
         if (overlay && overlay.parentNode) {
             overlay.parentNode.removeChild(overlay);
@@ -319,102 +313,110 @@ function handleFullscreenChange() {
 }
 
 function showFloatingChatBubble(message, username, isSystem = false) {
-    if (!isFullscreen) {
-        console.log('Not in fullscreen mode');
-        return;
-    }
+    console.log('Chat message received:', username, message);
     
-    console.log('Creating floating chat bubble:', message, username);
-    
-    // Since visual elements aren't working, let's try browser notifications
-    // or use the document title to show messages
-    
-    // Method 1: Change document title (visible in browser tab)
-    const originalTitle = document.title;
-    document.title = `💬 ${username}: ${message}`;
-    
-    // Method 2: Try browser notification (if permitted)
-    if ('Notification' in window && Notification.permission === 'granted') {
-        new Notification(`${username} says:`, {
-            body: message,
-            icon: '/favicon.ico',
-            tag: 'chat-message'
-        });
-    } else if ('Notification' in window && Notification.permission !== 'denied') {
-        Notification.requestPermission().then(permission => {
-            if (permission === 'granted') {
-                new Notification(`${username} says:`, {
-                    body: message,
-                    icon: '/favicon.ico',
-                    tag: 'chat-message'
-                });
-            }
-        });
-    }
-    
-    // Method 3: Console styling (visible in dev tools)
-    console.log(
-        `%c💬 CHAT MESSAGE %c${username}: ${message}`,
-        'background: #ff6b35; color: white; padding: 5px 10px; border-radius: 3px; font-weight: bold;',
-        'background: #ffd700; color: black; padding: 5px 10px; border-radius: 3px; margin-left: 5px;'
-    );
-    
-    // Method 4: Try to overlay on the iframe itself (last resort)
-    const iframe = document.getElementById('player');
-    if (iframe && iframe.parentNode) {
-        const overlay = document.createElement('div');
-        overlay.innerHTML = `${username}: ${message}`;
-        overlay.style.cssText = `
-            position: fixed !important;
-            top: 50px !important;
-            right: 50px !important;
-            background: rgba(255, 107, 53, 0.95) !important;
-            color: white !important;
-            padding: 15px 20px !important;
-            border-radius: 25px !important;
-            font-size: 18px !important;
-            font-weight: bold !important;
-            z-index: 2147483647 !important;
-            pointer-events: none !important;
-            font-family: Arial, sans-serif !important;
-            border: 3px solid #FFD700 !important;
-            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.8) !important;
-            display: block !important;
-            visibility: visible !important;
-            opacity: 1 !important;
-        `;
+    if (isFullscreen) {
+        // During fullscreen: Use alternative notifications
+        console.log('In fullscreen mode - using alternative notifications');
         
-        // Add to body instead of iframe parent
-        document.body.appendChild(overlay);
+        // Method 1: Audio notification
+        try {
+            const audio = new Audio();
+            audio.src = 'data:audio/wav;base64,UklGRnoGAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQoGAACBhYqFbF1fdJivrJBhNjVgodDbq2EcBj+a2/LDciUFLIHO8tiJNwgZaLvt559NEAxQp+PwtmMcBjiR1/LMeSwFJHfH8N2QQAoUXrTp66hVFApGn+DyvmwhBSuBzvLZiTYIG2m98OScTgwOUarm7blmGgU7k9n1unEiBC13yO/eizEIHWq+8+OWT';
+            audio.volume = 0.3;
+            audio.play().catch(e => console.log('Audio play failed:', e));
+        } catch (e) {
+            console.log('Audio notification failed:', e);
+        }
         
-        console.log('Added overlay to body with fixed positioning');
-        console.log('Overlay rect:', overlay.getBoundingClientRect());
-        
-        // Make it blink to ensure visibility
-        let blinkCount = 0;
-        const blinkInterval = setInterval(() => {
-            overlay.style.background = overlay.style.background.includes('255, 107, 53') 
-                ? 'rgba(255, 0, 0, 0.95) !important' 
-                : 'rgba(255, 107, 53, 0.95) !important';
-            blinkCount++;
-            if (blinkCount >= 6) {
-                clearInterval(blinkInterval);
-                overlay.style.background = 'rgba(255, 107, 53, 0.95) !important';
-            }
-        }, 300);
-        
+        // Method 2: Browser tab title notification
+        const originalTitle = document.title;
+        document.title = `💬 ${username}: ${message}`;
         setTimeout(() => {
-            if (overlay.parentNode) {
-                overlay.parentNode.removeChild(overlay);
-                console.log('Overlay removed after 2 seconds');
-            }
-        }, 2000);
+            document.title = originalTitle;
+        }, 3000);
+        
+        // Method 3: Console notification with styling
+        console.log(
+            `%c💬 FULLSCREEN CHAT %c${username}: ${message}`,
+            'background: #ff6b35; color: white; padding: 8px 12px; border-radius: 4px; font-weight: bold; font-size: 14px;',
+            'background: #ffd700; color: black; padding: 8px 12px; border-radius: 4px; margin-left: 5px; font-size: 14px;'
+        );
+        
+        // Method 4: Store message for display when exiting fullscreen
+        if (!window.fullscreenMessages) {
+            window.fullscreenMessages = [];
+        }
+        window.fullscreenMessages.push({
+            username,
+            message,
+            timestamp: Date.now(),
+            isSystem
+        });
+        
+    } else {
+        // Not in fullscreen: Show normal floating bubble
+        console.log('Not in fullscreen - showing normal bubble');
+        showNormalChatBubble(message, username, isSystem);
+    }
+}
+
+// Function to show normal chat bubbles when not in fullscreen
+function showNormalChatBubble(message, username, isSystem = false) {
+    const bubble = document.createElement('div');
+    bubble.className = `chat-bubble ${isSystem ? 'system' : ''}`;
+    
+    if (isSystem) {
+        bubble.textContent = message;
+    } else {
+        bubble.innerHTML = `<span class="username">${username}:</span>${message}`;
     }
     
-    // Restore title after 2 seconds
+    // Position bubble on the right side of the screen
+    const topPosition = Math.random() * 50 + 25;
+    
+    bubble.style.cssText = `
+        position: fixed !important;
+        top: ${topPosition}vh !important;
+        right: 40px !important;
+        z-index: 999999 !important;
+        background: rgba(255, 215, 0, 0.95) !important;
+        color: #000000 !important;
+        padding: 15px 20px !important;
+        border-radius: 25px !important;
+        font-size: 16px !important;
+        font-weight: 600 !important;
+        max-width: 350px !important;
+        border: 3px solid #FF6B35 !important;
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3) !important;
+        pointer-events: none !important;
+        font-family: Arial, sans-serif !important;
+        display: block !important;
+        visibility: visible !important;
+        opacity: 0 !important;
+        transform: translateX(100px) !important;
+        transition: all 0.4s ease-out !important;
+    `;
+    
+    document.body.appendChild(bubble);
+    
+    // Animate in
     setTimeout(() => {
-        document.title = originalTitle;
-    }, 2000);
+        bubble.style.opacity = '1 !important';
+        bubble.style.transform = 'translateX(0) !important';
+    }, 50);
+    
+    // Remove after 3 seconds
+    setTimeout(() => {
+        bubble.style.opacity = '0 !important';
+        bubble.style.transform = 'translateX(100px) !important';
+    }, 3000);
+    
+    setTimeout(() => {
+        if (bubble.parentNode) {
+            bubble.parentNode.removeChild(bubble);
+        }
+    }, 3500);
 }
 
 // Initialize
@@ -468,33 +470,77 @@ window.testExistingElements = function() {
     }, 3000);
 };
 
-// Test if we can see elements when NOT in fullscreen
-window.testNonFullscreen = function() {
-    console.log('Testing bubble when NOT in fullscreen...');
+// Ultimate basic test - try the simplest possible approach
+window.testBasicFunction = function() {
+    console.log('=== BASIC FUNCTION TEST ===');
     
-    const bubble = document.createElement('div');
-    bubble.innerHTML = 'NON-FULLSCREEN TEST BUBBLE';
-    bubble.style.cssText = `
-        position: fixed !important;
-        top: 100px !important;
-        left: 100px !important;
-        background: #FF0000 !important;
-        color: #FFFFFF !important;
-        padding: 30px !important;
-        font-size: 24px !important;
-        border: 5px solid #00FF00 !important;
-        z-index: 999999 !important;
-        display: block !important;
-        visibility: visible !important;
-        opacity: 1 !important;
-    `;
+    // Test 1: Can we modify the page at all?
+    try {
+        document.body.style.backgroundColor = 'red';
+        console.log('✓ Body background changed to red');
+        
+        setTimeout(() => {
+            document.body.style.backgroundColor = '';
+            console.log('✓ Body background reset');
+        }, 2000);
+    } catch (e) {
+        console.error('✗ Failed to change body background:', e);
+    }
     
-    document.body.appendChild(bubble);
-    console.log('Non-fullscreen bubble added');
+    // Test 2: Can we create and show an alert?
+    try {
+        alert('TEST ALERT - Can you see this?');
+        console.log('✓ Alert shown');
+    } catch (e) {
+        console.error('✗ Failed to show alert:', e);
+    }
     
-    setTimeout(() => {
-        if (bubble.parentNode) {
-            bubble.parentNode.removeChild(bubble);
-        }
-    }, 3000);
+    // Test 3: Can we create a simple element?
+    try {
+        const testDiv = document.createElement('div');
+        testDiv.innerHTML = 'BASIC TEST DIV';
+        testDiv.style.cssText = `
+            position: fixed;
+            top: 10px;
+            left: 10px;
+            background: blue;
+            color: white;
+            padding: 20px;
+            z-index: 999999;
+            font-size: 20px;
+        `;
+        document.body.appendChild(testDiv);
+        console.log('✓ Test div created and added');
+        
+        setTimeout(() => {
+            if (testDiv.parentNode) {
+                testDiv.parentNode.removeChild(testDiv);
+                console.log('✓ Test div removed');
+            }
+        }, 3000);
+    } catch (e) {
+        console.error('✗ Failed to create test div:', e);
+    }
+    
+    // Test 4: Check if our chat functions exist
+    console.log('Chat functions check:');
+    console.log('- showFloatingChatBubble exists:', typeof showFloatingChatBubble);
+    console.log('- addChatMessage exists:', typeof addChatMessage);
+    console.log('- isFullscreen value:', isFullscreen);
+    console.log('- currentRoom value:', currentRoom);
+};
+
+// Test if messages are actually being sent
+window.testChatMessage = function() {
+    console.log('=== TESTING CHAT MESSAGE MANUALLY ===');
+    
+    // Bypass all checks and force a message
+    const testMessage = 'MANUAL TEST MESSAGE';
+    const testUser = 'TestUser';
+    
+    console.log('Calling showFloatingChatBubble directly...');
+    showFloatingChatBubble(testMessage, testUser, false);
+    
+    console.log('Also calling addChatMessage...');
+    addChatMessage(testMessage, testUser, true);
 };
