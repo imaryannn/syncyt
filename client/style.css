@@ -140,6 +140,7 @@ body {
     overflow: hidden;
     margin-bottom: 20px;
     box-shadow: 3px 3px 0px var(--secondary-color);
+    position: relative;
 }
 
 #player {
@@ -462,42 +463,291 @@ body {
     font-weight: 500;
 }
 
+/* Fullscreen Chat Overlay */
+.fullscreen-chat-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    pointer-events: none;
+    z-index: 999999;
+    display: none;
+}
+
+.fullscreen-chat-overlay.active {
+    display: block;
+}
+
+.chat-bubble {
+    position: fixed !important;
+    background: rgba(255, 215, 0, 0.95) !important;
+    color: #000000 !important;
+    padding: 15px 20px !important;
+    border-radius: 30px !important;
+    font-size: 18px !important;
+    font-weight: 700 !important;
+    max-width: 400px !important;
+    word-wrap: break-word !important;
+    border: 4px solid #FF6B35 !important;
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.9) !important;
+    animation: bubbleSlide 0.8s ease-out, bubbleFade 6s ease-in-out !important;
+    z-index: 2147483647 !important;
+    right: 40px !important;
+    backdrop-filter: blur(15px) !important;
+    transform: translateZ(0) !important;
+    will-change: transform, opacity !important;
+    pointer-events: none !important;
+}
+
+[data-theme="dark"] .chat-bubble {
+    background: rgba(124, 58, 237, 0.95) !important;
+    color: #ffffff !important;
+    border-color: #a855f7 !important;
+}
+
+.chat-bubble .username {
+    color: #FF6B35 !important;
+    font-weight: 900 !important;
+    margin-right: 10px !important;
+    text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.8) !important;
+    font-size: 16px !important;
+}
+
+[data-theme="dark"] .chat-bubble .username {
+    color: #fbbf24 !important;
+}
+
+.chat-bubble.system {
+    background: rgba(255, 107, 53, 0.95) !important;
+    border-color: #FFD700 !important;
+    font-style: italic !important;
+    text-align: center !important;
+    color: #ffffff !important;
+}
+
+[data-theme="dark"] .chat-bubble.system {
+    background: rgba(168, 85, 247, 0.95) !important;
+    border-color: #7c3aed !important;
+}
+
+@keyframes bubbleSlide {
+    from {
+        transform: translateX(150px) translateZ(0) scale(0.7);
+        opacity: 0;
+    }
+    to {
+        transform: translateX(0) translateZ(0) scale(1);
+        opacity: 1;
+    }
+}
+
+@keyframes bubbleFade {
+    0%, 50% {
+        opacity: 1;
+        transform: translateX(0) translateZ(0) scale(1);
+    }
+    100% {
+        opacity: 0;
+        transform: translateX(100px) translateZ(0) scale(0.8);
+    }
+}
+
 @media (max-width: 768px) {
     .main-content {
         grid-template-columns: 1fr;
-        grid-template-rows: auto 350px;
+        grid-template-rows: auto 400px;
+        gap: 15px;
+        height: auto;
     }
     
     .container {
-        padding: 10px;
+        padding: 15px;
     }
     
     .header {
         flex-direction: column;
-        gap: 10px;
+        gap: 15px;
         text-align: center;
+        padding: 15px;
     }
     
     .header-controls {
-        flex-direction: column;
-        gap: 10px;
-    }
-    
-    .footer {
-        margin-top: 10px;
-        padding: 15px;
-        font-size: 12px;
+        flex-direction: row;
+        justify-content: center;
+        gap: 20px;
     }
     
     .logo {
         font-size: 1.8rem;
     }
     
+    .room-info {
+        font-size: 0.9rem;
+        gap: 10px;
+    }
+    
+    .video-section {
+        padding: 15px;
+    }
+    
     .controls {
         flex-direction: column;
+        gap: 10px;
     }
     
     #youtube-url {
         width: 100%;
+        padding: 15px;
+        font-size: 16px;
+    }
+    
+    #load-video {
+        width: 100%;
+        padding: 15px;
+        font-size: 16px;
+    }
+    
+    .chat-section {
+        min-height: 350px;
+    }
+    
+    .chat-header {
+        padding: 12px 15px;
+        font-size: 1rem;
+    }
+    
+    #chat-messages {
+        padding: 10px;
+        gap: 8px;
+    }
+    
+    .message {
+        padding: 8px 10px;
+        font-size: 13px;
+    }
+    
+    .chat-input {
+        padding: 10px;
+        gap: 8px;
+    }
+    
+    #message-input {
+        padding: 12px;
+        font-size: 16px;
+    }
+    
+    #send-message {
+        padding: 12px 15px;
+        font-size: 11px;
+    }
+    
+    .modal-content {
+        margin: 20px;
+        padding: 25px;
+        width: calc(100% - 40px);
+        max-width: 400px;
+    }
+    
+    .modal-content h2 {
+        font-size: 1.5rem;
+        margin-bottom: 20px;
+    }
+    
+    #room-input {
+        width: 100%;
+        padding: 15px;
+        font-size: 16px;
+        margin-bottom: 15px;
+    }
+    
+    #join-room, #create-room {
+        padding: 15px;
+        font-size: 16px;
+        margin: 8px 0;
+    }
+    
+    .footer {
+        margin-top: 15px;
+        padding: 15px;
+        font-size: 12px;
+    }
+    
+    .theme-toggle {
+        padding: 10px;
+        font-size: 18px;
+    }
+}
+
+@media (max-width: 480px) {
+    .container {
+        padding: 10px;
+    }
+    
+    .header {
+        padding: 12px;
+    }
+    
+    .logo {
+        font-size: 1.6rem;
+    }
+    
+    .room-info {
+        font-size: 0.8rem;
+        flex-direction: column;
+        gap: 5px;
+    }
+    
+    .video-section, .chat-section {
+        padding: 12px;
+    }
+    
+    .main-content {
+        grid-template-rows: auto 300px;
+        gap: 10px;
+    }
+    
+    .chat-section {
+        min-height: 280px;
+    }
+    
+    .modal-content {
+        padding: 20px;
+        margin: 15px;
+    }
+    
+    .modal-content h2 {
+        font-size: 1.3rem;
+    }
+    
+    #room-input {
+        padding: 12px;
+        font-size: 14px;
+    }
+    
+    .footer {
+        padding: 12px;
+        font-size: 11px;
+    }
+}
+
+@media (min-width: 769px) and (max-width: 1024px) {
+    .container {
+        padding: 25px;
+    }
+    
+    .main-content {
+        grid-template-columns: 1.8fr 1fr;
+        gap: 25px;
+    }
+    
+    .logo {
+        font-size: 2rem;
+    }
+}
+
+@media (min-width: 1025px) and (max-width: 1200px) {
+    .main-content {
+        grid-template-columns: 2.2fr 1fr;
     }
 }
