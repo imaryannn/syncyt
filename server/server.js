@@ -56,9 +56,24 @@ io.on('connection', (socket) => {
     const room = rooms.get(roomId);
     
     if (room) {
-      room.videoState = { videoId, currentTime, isPlaying: action === 'play' };
+      // Update room state
+      room.videoState = { 
+        videoId, 
+        currentTime, 
+        isPlaying: action === 'play' 
+      };
+      
+      // Broadcast to all other users in the room
       socket.to(roomId).emit('sync-video', { action, videoId, currentTime });
-      console.log(`Video ${action} in room ${roomId}:`, videoId, 'at', currentTime);
+      
+      console.log(`Video ${action} in room ${roomId}:`, {
+        videoId,
+        currentTime,
+        isPlaying: action === 'play',
+        usersInRoom: room.users.size
+      });
+    } else {
+      console.log(`Room ${roomId} not found for video action`);
     }
   });
 

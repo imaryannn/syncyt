@@ -51,7 +51,16 @@ function onPlayerStateChange(event) {
     // Only sync if we have a valid video
     if (!videoId) return;
     
+    console.log('Player state changed:', {
+        state: state,
+        stateName: getStateName(state),
+        currentTime: currentTime,
+        videoId: videoId,
+        room: currentRoom
+    });
+    
     if (state === YT.PlayerState.PLAYING) {
+        console.log('Video played - syncing to other users');
         socket.emit('video-action', {
             roomId: currentRoom,
             action: 'play',
@@ -59,6 +68,17 @@ function onPlayerStateChange(event) {
             currentTime
         });
     } else if (state === YT.PlayerState.PAUSED) {
+        console.log('Video paused - syncing to other users');
+        socket.emit('video-action', {
+            roomId: currentRoom,
+            action: 'pause',
+            videoId,
+            currentTime
+        });
+    } else if (state === YT.PlayerState.BUFFERING) {
+        console.log('Video buffering');
+    } else if (state === YT.PlayerState.ENDED) {
+        console.log('Video ended - syncing to other users');
         socket.emit('video-action', {
             roomId: currentRoom,
             action: 'pause',
@@ -66,6 +86,19 @@ function onPlayerStateChange(event) {
             currentTime
         });
     }
+}
+
+// Helper function to get readable state names
+function getStateName(state) {
+    const states = {
+        [-1]: 'UNSTARTED',
+        [0]: 'ENDED',
+        [1]: 'PLAYING',
+        [2]: 'PAUSED',
+        [3]: 'BUFFERING',
+        [5]: 'CUED'
+    };
+    return states[state] || 'UNKNOWN';
 }
 
 // Socket events
@@ -77,17 +110,41 @@ function setupSocketEvents() {
     });
 
     socket.on('sync-video', (data) => {
+        console.log('Received video sync command:', data);
         const { action, videoId, currentTime } = data;
         
-        if (videoId && getVideoId() !== videoId) {
-            player.loadVideoById(videoId, currentTime);
-        } else {
-            player.seekTo(currentTime, true);
+        if (!player) {
+            console.log('Player not ready, ignoring sync command');
+            return;
         }
         
+        const currentVideoId = getVideoId();
+        console.log('Current video ID:', currentVideoId, 'Sync video ID:', videoId);
+        
+        // If different video, load the new one
+        if (videoId && currentVideoId !== videoId) {
+            console.log('Loading different video:', videoId);
+            player.loadVideoById(videoId, currentTime);
+        } else if (currentTime !== undefined) {
+            // Sync to the same position
+            const playerTime = Math.floor(player.getCurrentTime());
+            const timeDiff = Math.abs(playerTime - currentTime);
+            
+            console.log('Time sync - Player:', playerTime, 'Target:', currentTime, 'Diff:', timeDiff);
+            
+            // Only seek if there's a significant difference (more than 2 seconds)
+            if (timeDiff > 2) {
+                console.log('Seeking to sync time:', currentTime);
+                player.seekTo(currentTime, true);
+            }
+        }
+        
+        // Apply the action
         if (action === 'play') {
+            console.log('Playing video due to sync');
             player.playVideo();
         } else if (action === 'pause') {
+            console.log('Pausing video due to sync');
             player.pauseVideo();
         }
     });
@@ -107,11 +164,18 @@ function setupSocketEvents() {
     });
 
     socket.on('chat-message', (data) => {
+        console.log('Received chat message:', data);
         addChatMessage(data.message, data.userId);
     });
 
     socket.on('connect', () => {
         console.log('Connected to server with ID:', socket.id);
+        // Test if chat elements exist
+        console.log('Chat elements check:', {
+            chatMessages: !!chatMessages,
+            messageInput: !!messageInput,
+            sendMessageBtn: !!sendMessageBtn
+        });
     });
 
     socket.on('disconnect', () => {
@@ -175,8 +239,22 @@ loadVideoBtn.addEventListener('click', () => {
     const url = youtubeUrl.value.trim();
     const videoId = extractVideoId(url);
     if (videoId) {
+        console.log('Loading video:', videoId);
         loadVideo(videoId);
         youtubeUrl.value = '';
+        
+        // Notify other users about the new video
+        if (currentRoom && socket) {
+            socket.emit('video-action', {
+                roomId: currentRoom,
+                action: 'load',
+                videoId,
+                currentTime: 0
+            });
+        }
+    } else {
+        console.error('Invalid YouTube URL:', url);
+        alert('Please enter a valid YouTube URL');
     }
 });
 
@@ -235,7 +313,8 @@ function loadVideo(videoId, startTime = 0, autoplay = false) {
 
 function sendMessage() {
     const message = messageInput.value.trim();
-    if (message && currentRoom) {
+    if (message && currentRoom && socket) {
+        console.log('Sending message:', message, 'to room:', currentRoom);
         socket.emit('chat-message', {
             roomId: currentRoom,
             message,
@@ -243,15 +322,25 @@ function sendMessage() {
         });
         addChatMessage(message, socket.id, true);
         messageInput.value = '';
+    } else {
+        console.log('Cannot send message:', {
+            message: !!message,
+            currentRoom: !!currentRoom,
+            socket: !!socket
+        });
     }
 }
 
 function addChatMessage(message, userId, isOwn = false) {
+    console.log('Adding chat message:', message, 'from:', userId, 'isOwn:', isOwn);
+    
     const messageDiv = document.createElement('div');
     messageDiv.className = 'message';
     messageDiv.innerHTML = `<strong>${isOwn ? 'You' : userId.substring(0, 6)}:</strong> ${message}`;
     chatMessages.appendChild(messageDiv);
     chatMessages.scrollTop = chatMessages.scrollHeight;
+    
+    console.log('Chat message added to DOM. Total messages:', chatMessages.children.length);
     
     // Show floating bubble if in fullscreen
     if (isFullscreen) {
@@ -260,11 +349,15 @@ function addChatMessage(message, userId, isOwn = false) {
 }
 
 function addSystemMessage(message) {
+    console.log('Adding system message:', message);
+    
     const messageDiv = document.createElement('div');
     messageDiv.className = 'message system-message';
     messageDiv.textContent = message;
     chatMessages.appendChild(messageDiv);
     chatMessages.scrollTop = chatMessages.scrollHeight;
+    
+    console.log('System message added to DOM. Total messages:', chatMessages.children.length);
     
     // Show floating bubble if in fullscreen
     if (isFullscreen) {
@@ -446,50 +539,54 @@ window.addEventListener('load', () => {
     initTheme();
     initSocket();
     joinModal.style.display = 'flex';
+    
+    // Debug: Check if all elements are found
+    console.log('DOM elements check:', {
+        joinModal: !!joinModal,
+        chatMessages: !!chatMessages,
+        messageInput: !!messageInput,
+        sendMessageBtn: !!sendMessageBtn,
+        roomIdDisplay: !!roomIdDisplay,
+        userCountDisplay: !!userCountDisplay
+    });
 });
 
-// Ultimate test - try to modify existing elements
-window.testExistingElements = function() {
-    console.log('Testing modification of existing elements...');
+// Test chat functionality
+window.testChat = function() {
+    console.log('=== TESTING CHAT FUNCTIONALITY ===');
     
-    // Try to modify the body background
-    document.body.style.background = 'red !important';
-    document.body.style.border = '20px solid blue !important';
+    // Test 1: Check if we're in a room
+    console.log('Current room:', currentRoom);
+    console.log('Socket connected:', socket && socket.connected);
     
-    // Try to modify the container
-    const container = document.querySelector('.container');
-    if (container) {
-        container.style.background = 'yellow !important';
-        container.style.border = '10px solid green !important';
-        console.log('Modified container');
+    // Test 2: Try to add a message directly to chat
+    if (chatMessages) {
+        addChatMessage('Test message from console', 'TestUser', false);
+        console.log('✓ Direct message added to chat');
+    } else {
+        console.error('✗ Chat messages container not found');
     }
     
-    // Try to create element outside fullscreen
-    const testDiv = document.createElement('div');
-    testDiv.innerHTML = 'OUTSIDE FULLSCREEN TEST';
-    testDiv.style.cssText = `
-        position: fixed !important;
-        top: 0 !important;
-        left: 0 !important;
-        background: purple !important;
-        color: white !important;
-        padding: 20px !important;
-        z-index: 999999 !important;
-        font-size: 20px !important;
-    `;
-    document.body.appendChild(testDiv);
+    // Test 3: Try to send a message through socket
+    if (currentRoom && socket) {
+        socket.emit('chat-message', {
+            roomId: currentRoom,
+            message: 'Test socket message',
+            userId: 'TestUser'
+        });
+        console.log('✓ Socket message sent');
+    } else {
+        console.error('✗ Cannot send socket message - no room or socket');
+    }
     
-    setTimeout(() => {
-        document.body.style.background = '';
-        document.body.style.border = '';
-        if (container) {
-            container.style.background = '';
-            container.style.border = '';
-        }
-        if (testDiv.parentNode) {
-            testDiv.parentNode.removeChild(testDiv);
-        }
-    }, 3000);
+    // Test 4: Check chat input functionality
+    if (messageInput) {
+        messageInput.value = 'Test input message';
+        sendMessage();
+        console.log('✓ Input message sent');
+    } else {
+        console.error('✗ Message input not found');
+    }
 };
 
 // Ultimate basic test - try the simplest possible approach
