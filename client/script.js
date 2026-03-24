@@ -1,24 +1,126 @@
-const socket = io('http://localhost:3001');
-let player;
+let player = null;
 let currentRoom = null;
 let isUpdating = false;
+let socket = null;
 
-// Theme Toggle
-const themeToggle = document.getElementById('theme-toggle');
+// Initialize theme
 const savedTheme = localStorage.getItem('theme') || 'light';
 document.documentElement.setAttribute('data-theme', savedTheme);
-updateThemeButton(savedTheme);
 
-themeToggle.addEventListener('click', () => {
-    const currentTheme = document.documentElement.getAttribute('data-theme');
-    const newTheme = currentTheme === 'light' ? 'dark' : 'light';
-    document.documentElement.setAttribute('data-theme', newTheme);
-    localStorage.setItem('theme', newTheme);
-    updateThemeButton(newTheme);
+// Wait for DOM to load
+document.addEventListener('DOMContentLoaded', () => {
+    // Initialize Socket.IO
+    socket = io('http://localhost:3001');
+    // Theme Toggle
+    const themeToggle = document.getElementById('theme-toggle');
+    updateThemeButton(savedTheme);
+    
+    themeToggle.addEventListener('click', () => {
+        const currentTheme = document.documentElement.getAttribute('data-theme');
+        const newTheme = currentTheme === 'light' ? 'dark' : 'light';
+        document.documentElement.setAttribute('data-theme', newTheme);
+        localStorage.setItem('theme', newTheme);
+        updateThemeButton(newTheme);
+    });
+    
+    // Modal handlers
+    document.getElementById('join-room').addEventListener('click', () => {
+        const roomId = document.getElementById('room-input').value.trim();
+        if (roomId) {
+            joinRoom(roomId);
+        } else {
+            addSystemMessage('⚠️ Please enter a room ID');
+        }
+    });
+    
+    document.getElementById('create-room').addEventListener('click', () => {
+        const roomId = Math.random().toString(36).substring(2, 8).toUpperCase();
+        joinRoom(roomId);
+    });
+    
+    document.getElementById('room-input').addEventListener('keypress', (e) => {
+        if (e.key === 'Enter') {
+            const roomId = e.target.value.trim();
+            if (roomId) {
+                joinRoom(roomId);
+            } else {
+                const newRoomId = Math.random().toString(36).substring(2, 8).toUpperCase();
+                joinRoom(newRoomId);
+            }
+        }
+    });
+    
+    // Load video
+    document.getElementById('load-video').addEventListener('click', () => {
+        const url = document.getElementById('youtube-url').value.trim();
+        const videoId = getVideoId(url);
+        
+        if (videoId && player) {
+            player.loadVideoById(videoId);
+            socket.emit('video-action', {
+                roomId: currentRoom,
+                action: 'load',
+                videoId,
+                currentTime: 0
+            });
+            addSystemMessage('🎉 Video loaded successfully!');
+        } else {
+            addSystemMessage('⚠️ Invalid YouTube URL');
+        }
+    });
+    
+    // Chat functionality
+    document.getElementById('send-message').addEventListener('click', sendMessage);
+    document.getElementById('message-input').addEventListener('keypress', (e) => {
+        if (e.key === 'Enter') sendMessage();
+    });
+    
+    // Socket events
+    socket.on('room-state', (state) => {
+        if (state.videoId && player) {
+            isUpdating = true;
+            player.loadVideoById(state.videoId, state.currentTime);
+            if (!state.isPlaying) {
+                setTimeout(() => player.pauseVideo(), 500);
+            }
+            isUpdating = false;
+        }
+    });
+    
+    socket.on('sync-video', (data) => {
+        if (!player) return;
+        
+        isUpdating = true;
+        
+        if (data.action === 'load' && data.videoId) {
+            player.loadVideoById(data.videoId, data.currentTime);
+        } else if (data.action === 'play') {
+            player.seekTo(data.currentTime, true);
+            player.playVideo();
+        } else if (data.action === 'pause') {
+            player.seekTo(data.currentTime, true);
+            player.pauseVideo();
+        }
+        
+        setTimeout(() => { isUpdating = false; }, 500);
+    });
+    
+    socket.on('user-joined', (data) => {
+        document.getElementById('user-count').textContent = `👥 ${data.userCount}`;
+        addSystemMessage('Someone joined the room');
+    });
+    
+    socket.on('user-left', (data) => {
+        document.getElementById('user-count').textContent = `👥 ${data.userCount}`;
+        addSystemMessage('Someone left the room');
+    });
 });
 
 function updateThemeButton(theme) {
-    themeToggle.textContent = theme === 'light' ? '🌙 DARK' : '☀️ LIGHT';
+    const themeToggle = document.getElementById('theme-toggle');
+    if (themeToggle) {
+        themeToggle.textContent = theme === 'light' ? '🌙 DARK' : '☀️ LIGHT';
+    }
 }
 
 // YouTube API Ready
@@ -72,32 +174,7 @@ function getVideoId(url = null) {
     return match ? match[1] : null;
 }
 
-// Modal handlers
-document.getElementById('join-room').addEventListener('click', () => {
-    const roomId = document.getElementById('room-input').value.trim();
-    if (roomId) {
-        joinRoom(roomId);
-    } else {
-        addSystemMessage('⚠️ Please enter a room ID');
-    }
-});
 
-document.getElementById('create-room').addEventListener('click', () => {
-    const roomId = Math.random().toString(36).substring(2, 8).toUpperCase();
-    joinRoom(roomId);
-});
-
-document.getElementById('room-input').addEventListener('keypress', (e) => {
-    if (e.key === 'Enter') {
-        const roomId = e.target.value.trim();
-        if (roomId) {
-            joinRoom(roomId);
-        } else {
-            const newRoomId = Math.random().toString(36).substring(2, 8).toUpperCase();
-            joinRoom(newRoomId);
-        }
-    }
-});
 
 // Join room
 function joinRoom(roomId) {
@@ -108,70 +185,11 @@ function joinRoom(roomId) {
     addSystemMessage(`Joined room ${roomId}`);
 }
 
-// Load video
-document.getElementById('load-video').addEventListener('click', () => {
-    const url = document.getElementById('youtube-url').value.trim();
-    const videoId = getVideoId(url);
-    
-    if (videoId && player) {
-        player.loadVideoById(videoId);
-        socket.emit('video-action', {
-            roomId: currentRoom,
-            action: 'load',
-            videoId,
-            currentTime: 0
-        });
-        addSystemMessage('🎉 Video loaded successfully!');
-    } else {
-        addSystemMessage('⚠️ Invalid YouTube URL');
-    }
-});
 
-// Socket events
-socket.on('room-state', (state) => {
-    if (state.videoId && player) {
-        isUpdating = true;
-        player.loadVideoById(state.videoId, state.currentTime);
-        if (!state.isPlaying) {
-            setTimeout(() => player.pauseVideo(), 500);
-        }
-        isUpdating = false;
-    }
-});
 
-socket.on('sync-video', (data) => {
-    if (!player) return;
-    
-    isUpdating = true;
-    
-    if (data.action === 'load' && data.videoId) {
-        player.loadVideoById(data.videoId, data.currentTime);
-    } else if (data.action === 'play') {
-        player.seekTo(data.currentTime, true);
-        player.playVideo();
-    } else if (data.action === 'pause') {
-        player.seekTo(data.currentTime, true);
-        player.pauseVideo();
-    }
-    
-    setTimeout(() => { isUpdating = false; }, 500);
-});
 
-socket.on('user-joined', (data) => {
-    document.getElementById('user-count').textContent = `👥 ${data.userCount}`;
-    addSystemMessage('Someone joined the room');
-});
 
-socket.on('user-left', (data) => {
-    document.getElementById('user-count').textContent = `👥 ${data.userCount}`;
-    addSystemMessage('Someone left the room');
-});
 
-// Chat functionality
-document.getElementById('send-message').addEventListener('click', sendMessage);
-document.getElementById('message-input').addEventListener('keypress', (e) => {
-    if (e.key === 'Enter') sendMessage();
-});
 
 function sendMessage() {
     const input = document.getElementById('message-input');
