@@ -21,11 +21,11 @@
     --bg-secondary: #2d2d2d;
     --bg-card: #242424;
     --text-primary: #FFEB3B;
-    --text-secondary: #FFF9C4;
+    --text-secondary: #FFFFFF;
     --accent: #FFD600;
     --accent-dark: #FFC107;
     --border: #FFEB3B;
-    --shadow: rgba(255, 235, 59, 0.2);
+    --shadow: rgba(255, 235, 59, 0.3);
 }
 
 body {
@@ -153,6 +153,11 @@ body {
     background: var(--bg-card);
 }
 
+#youtube-url::placeholder {
+    color: var(--text-secondary);
+    opacity: 0.6;
+}
+
 #load-video {
     padding: 15px 30px;
     background: var(--accent);
@@ -219,6 +224,11 @@ body {
     font-family: 'Courier New', monospace;
     font-weight: bold;
     outline: none;
+}
+
+#message-input::placeholder {
+    color: var(--text-secondary);
+    opacity: 0.6;
 }
 
 #send-message {
@@ -289,6 +299,11 @@ body {
     box-shadow: 4px 4px 0 var(--shadow);
 }
 
+#room-input::placeholder {
+    color: var(--text-secondary);
+    opacity: 0.6;
+}
+
 #join-room, #create-room {
     display: block;
     width: 100%;
@@ -336,15 +351,17 @@ body {
 
 .message-time {
     font-size: 11px;
-    opacity: 0.7;
+    opacity: 0.8;
     margin-right: 8px;
-    color: var(--text-secondary);
+    color: var(--accent);
+    font-weight: bold;
 }
 
 .system-message {
     background: var(--accent);
     border-left-color: var(--border);
     font-weight: bold;
+    color: var(--text-primary);
 }
 
 /* Mobile Styles */
