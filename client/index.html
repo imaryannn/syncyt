@@ -9,11 +9,11 @@
 <body>
     <div class="container">
         <header class="header">
-            <h1 class="logo">🎬 Syncyt</h1>
-            <div class="header-controls">
-                <button id="theme-toggle" class="theme-toggle">🌙</button>
+            <h1 class="logo">🎬 SYNCYT</h1>
+            <div class="header-right">
+                <button id="theme-toggle" class="theme-toggle">🌙 DARK</button>
                 <div class="room-info">
-                    <span id="room-id"></span>
+                    <span id="room-id">🏠 NO ROOM</span>
                     <span id="user-count">👥 1</span>
                 </div>
             </div>
@@ -23,42 +23,35 @@
             <div class="video-section">
                 <div id="player-container">
                     <div id="player"></div>
-                    <div id="fullscreen-chat" class="fullscreen-chat-overlay">
-                        <!-- Floating chat bubbles will appear here during fullscreen -->
-                    </div>
                 </div>
                 
                 <div class="controls">
-                    <input type="text" id="youtube-url" placeholder="Paste YouTube URL here..." />
-                    <button id="load-video">Load Video</button>
+                    <input type="text" id="youtube-url" placeholder="🎥 PASTE YOUTUBE URL HERE..." />
+                    <button id="load-video">🚀 LOAD</button>
                 </div>
             </div>
 
             <div class="chat-section">
-                <div class="chat-header">💬 Room Chat</div>
+                <div class="chat-header">💬 LIVE CHAT</div>
                 <div id="chat-messages"></div>
                 <div class="chat-input">
-                    <input type="text" id="message-input" placeholder="Type a message..." />
-                    <button id="send-message">Send</button>
+                    <input type="text" id="message-input" placeholder="💭 TYPE MESSAGE..." />
+                    <button id="send-message">📤 SEND</button>
                 </div>
             </div>
         </div>
     </div>
 
-    <footer class="footer">
-        <p>Made with ❤️ by <strong>Aryan</strong></p>
-    </footer>
-
     <div id="join-modal" class="modal">
         <div class="modal-content">
-            <h2>Join Syncyt Room</h2>
-            <input type="text" id="room-input" placeholder="Enter room ID or create new" />
-            <button id="join-room">Join Room</button>
-            <button id="create-room">Create New Room</button>
+            <h2>🎉 JOIN SYNCYT</h2>
+            <input type="text" id="room-input" placeholder="ENTER ROOM ID..." />
+            <button id="join-room">🚪 JOIN ROOM</button>
+            <button id="create-room">✨ CREATE NEW</button>
         </div>
     </div>
 
-    <script src="https://cdn.socket.io/4.7.4/socket.io.min.js"></script>
+    <script src="/socket.io/socket.io.js"></script>
     <script src="script.js"></script>
     <script src="https://www.youtube.com/iframe_api"></script>
 </body>

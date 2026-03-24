@@ -3,6 +3,24 @@ let player;
 let currentRoom = null;
 let isUpdating = false;
 
+// Theme Toggle
+const themeToggle = document.getElementById('theme-toggle');
+const savedTheme = localStorage.getItem('theme') || 'light';
+document.documentElement.setAttribute('data-theme', savedTheme);
+updateThemeButton(savedTheme);
+
+themeToggle.addEventListener('click', () => {
+    const currentTheme = document.documentElement.getAttribute('data-theme');
+    const newTheme = currentTheme === 'light' ? 'dark' : 'light';
+    document.documentElement.setAttribute('data-theme', newTheme);
+    localStorage.setItem('theme', newTheme);
+    updateThemeButton(newTheme);
+});
+
+function updateThemeButton(theme) {
+    themeToggle.textContent = theme === 'light' ? '🌙 DARK' : '☀️ LIGHT';
+}
+
 // YouTube API Ready
 function onYouTubeIframeAPIReady() {
     player = new YT.Player('player', {
@@ -59,19 +77,25 @@ document.getElementById('join-room').addEventListener('click', () => {
     const roomId = document.getElementById('room-input').value.trim();
     if (roomId) {
         joinRoom(roomId);
+    } else {
+        addSystemMessage('⚠️ Please enter a room ID');
     }
 });
 
 document.getElementById('create-room').addEventListener('click', () => {
     const roomId = Math.random().toString(36).substring(2, 8).toUpperCase();
-    document.getElementById('room-input').value = roomId;
     joinRoom(roomId);
 });
 
 document.getElementById('room-input').addEventListener('keypress', (e) => {
     if (e.key === 'Enter') {
         const roomId = e.target.value.trim();
-        if (roomId) joinRoom(roomId);
+        if (roomId) {
+            joinRoom(roomId);
+        } else {
+            const newRoomId = Math.random().toString(36).substring(2, 8).toUpperCase();
+            joinRoom(newRoomId);
+        }
     }
 });
 
@@ -80,7 +104,7 @@ function joinRoom(roomId) {
     currentRoom = roomId;
     socket.emit('join-room', roomId);
     document.getElementById('join-modal').style.display = 'none';
-    document.getElementById('room-id').textContent = `Room: ${roomId}`;
+    document.getElementById('room-id').textContent = `🏠 ${roomId}`;
     addSystemMessage(`Joined room ${roomId}`);
 }
 
@@ -97,7 +121,9 @@ document.getElementById('load-video').addEventListener('click', () => {
             videoId,
             currentTime: 0
         });
-        addSystemMessage('Video loaded');
+        addSystemMessage('🎉 Video loaded successfully!');
+    } else {
+        addSystemMessage('⚠️ Invalid YouTube URL');
     }
 });
 
@@ -161,7 +187,8 @@ function addMessage(text) {
     const messagesDiv = document.getElementById('chat-messages');
     const messageEl = document.createElement('div');
     messageEl.className = 'message';
-    messageEl.textContent = text;
+    const time = new Date().toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
+    messageEl.innerHTML = `<span class="message-time">${time}</span> ${text}`;
     messagesDiv.appendChild(messageEl);
     messagesDiv.scrollTop = messagesDiv.scrollHeight;
 }
@@ -170,7 +197,7 @@ function addSystemMessage(text) {
     const messagesDiv = document.getElementById('chat-messages');
     const messageEl = document.createElement('div');
     messageEl.className = 'message system-message';
-    messageEl.textContent = text;
+    messageEl.innerHTML = `✨ ${text}`;
     messagesDiv.appendChild(messageEl);
     messagesDiv.scrollTop = messagesDiv.scrollHeight;
 }
