@@ -77,6 +77,7 @@ body {
     font-weight: bold;
     transition: all 0.2s;
     box-shadow: 4px 4px 0 var(--shadow);
+    color: #000000;
 }
 
 .theme-toggle:hover {
@@ -162,7 +163,7 @@ body {
     padding: 15px 30px;
     background: var(--accent);
     border: 3px solid var(--border);
-    color: var(--text-primary);
+    color: #000000;
     font-weight: 900;
     font-family: 'Courier New', monospace;
     cursor: pointer;
@@ -196,6 +197,7 @@ body {
     font-size: 1.1rem;
     background: var(--accent);
     text-transform: uppercase;
+    color: #000000;
 }
 
 #chat-messages {
@@ -235,7 +237,7 @@ body {
     padding: 12px 25px;
     background: var(--accent);
     border: 3px solid var(--border);
-    color: var(--text-primary);
+    color: #000000;
     font-weight: 900;
     font-family: 'Courier New', monospace;
     cursor: pointer;
@@ -317,16 +319,15 @@ body {
     font-size: 16px;
     text-transform: uppercase;
     box-shadow: 4px 4px 0 var(--shadow);
+    color: #000000;
 }
 
 #join-room {
     background: var(--accent);
-    color: var(--text-primary);
 }
 
 #create-room {
     background: var(--accent-dark);
-    color: var(--text-primary);
 }
 
 #join-room:hover, #create-room:hover {
@@ -361,7 +362,7 @@ body {
     background: var(--accent);
     border-left-color: var(--border);
     font-weight: bold;
-    color: var(--text-primary);
+    color: #000000;
 }
 
 /* Mobile Styles */
