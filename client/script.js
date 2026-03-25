@@ -54,6 +54,62 @@ document.addEventListener('DOMContentLoaded', () => {
     document.getElementById('create-room').addEventListener('click', () => {
         const roomId = Math.random().toString(36).substring(2, 8).toUpperCase();
         joinRoom(roomId);
+        
+        // Show copy popup
+        const copyPopup = document.createElement('div');
+        copyPopup.style.cssText = `
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: ${document.documentElement.getAttribute('data-theme') === 'light' ? '#ffffff' : '#1a1a1a'};
+            border: 3px solid #FFD700;
+            padding: 30px;
+            z-index: 10000;
+            text-align: center;
+            min-width: 300px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.3);
+        `;
+        copyPopup.innerHTML = `
+            <h2 style="margin: 0 0 20px 0; color: ${document.documentElement.getAttribute('data-theme') === 'light' ? '#000' : '#fff'}; font-size: 24px;">ROOM CREATED!</h2>
+            <p style="margin: 0 0 20px 0; color: #FFD700; font-size: 32px; font-weight: bold; letter-spacing: 3px;">${roomId}</p>
+            <button id="copy-room-btn" style="
+                background: #FFD700;
+                color: #000;
+                border: 2px solid #FFD700;
+                padding: 12px 30px;
+                font-size: 16px;
+                font-weight: bold;
+                cursor: pointer;
+                margin-right: 10px;
+                transition: all 0.3s;
+            ">COPY ROOM ID</button>
+            <button id="close-popup-btn" style="
+                background: transparent;
+                color: ${document.documentElement.getAttribute('data-theme') === 'light' ? '#000' : '#fff'};
+                border: 2px solid ${document.documentElement.getAttribute('data-theme') === 'light' ? '#000' : '#fff'};
+                padding: 12px 30px;
+                font-size: 16px;
+                font-weight: bold;
+                cursor: pointer;
+                transition: all 0.3s;
+            ">CLOSE</button>
+        `;
+        document.body.appendChild(copyPopup);
+        
+        document.getElementById('copy-room-btn').addEventListener('click', () => {
+            navigator.clipboard.writeText(roomId).then(() => {
+                document.getElementById('copy-room-btn').textContent = 'COPIED!';
+                document.getElementById('copy-room-btn').style.background = '#00ff00';
+                setTimeout(() => {
+                    copyPopup.remove();
+                }, 1000);
+            });
+        });
+        
+        document.getElementById('close-popup-btn').addEventListener('click', () => {
+            copyPopup.remove();
+        });
     });
     
     document.getElementById('room-input').addEventListener('keypress', (e) => {
