@@ -34,13 +34,17 @@ body {
     min-height: 100vh;
     color: var(--text-primary);
     transition: all 0.3s ease;
+    overflow: hidden;
 }
 
 .container {
     max-width: 1400px;
     margin: 0 auto;
     padding: 20px;
-    min-height: 100vh;
+    height: 100vh;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
 }
 
 .header {
@@ -107,7 +111,8 @@ body {
     display: grid;
     grid-template-columns: 2fr 1fr;
     gap: 20px;
-    height: calc(100vh - 140px);
+    flex: 1;
+    overflow: hidden;
 }
 
 .video-section {
@@ -188,6 +193,8 @@ body {
     display: flex;
     flex-direction: column;
     box-shadow: 8px 8px 0 var(--shadow);
+    overflow: hidden;
+    height: 100%;
 }
 
 .chat-header {
@@ -204,10 +211,12 @@ body {
     flex: 1;
     padding: 15px;
     overflow-y: auto;
+    overflow-x: hidden;
     display: flex;
     flex-direction: column;
     gap: 10px;
     background: var(--bg-secondary);
+    min-height: 0;
 }
 
 .chat-input {
