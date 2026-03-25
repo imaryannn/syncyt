@@ -9,8 +9,18 @@ document.documentElement.setAttribute('data-theme', savedTheme);
 
 // Wait for DOM to load
 document.addEventListener('DOMContentLoaded', () => {
-    // Initialize Socket.IO
-    socket = io('http://localhost:3001');
+    // Initialize Socket.IO with proper URL
+    const socketUrl = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
+        ? 'http://localhost:3001'
+        : window.location.origin;
+    
+    console.log('Connecting to socket server:', socketUrl);
+    socket = io(socketUrl, {
+        transports: ['websocket', 'polling'],
+        reconnection: true,
+        reconnectionDelay: 1000,
+        reconnectionAttempts: 5
+    });
     // Theme Toggle
     const themeToggle = document.getElementById('theme-toggle');
     updateThemeButton(savedTheme);
