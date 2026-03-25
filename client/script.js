@@ -132,6 +132,10 @@ document.addEventListener('DOMContentLoaded', () => {
         document.getElementById('user-count').textContent = `👥 ${data.userCount}`;
         addSystemMessage('Someone left the room');
     });
+    
+    socket.on('chat-message', (data) => {
+        addMessage(data.message, false);
+    });
 });
 
 function updateThemeButton(theme) {
@@ -213,8 +217,13 @@ function sendMessage() {
     const input = document.getElementById('message-input');
     const message = input.value.trim();
     
-    if (message) {
-        addMessage(message);
+    if (message && currentRoom) {
+        socket.emit('chat-message', {
+            roomId: currentRoom,
+            message: message,
+            userId: socket.id
+        });
+        addMessage(message, true);
         input.value = '';
     }
 }
