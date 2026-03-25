@@ -5,7 +5,10 @@ const path = require('path');
 
 const app = express();
 const server = http.createServer(app);
+
+console.log('Creating socket.io server...');
 const io = socketIo(server);
+console.log('Socket.io server created');
 
 const clientPath = path.resolve(__dirname, '../client');
 console.log('Serving static files from:', clientPath);
