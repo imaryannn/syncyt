@@ -201,10 +201,10 @@ function sendMessage() {
     }
 }
 
-function addMessage(text) {
+function addMessage(text, isOwn = true) {
     const messagesDiv = document.getElementById('chat-messages');
     const messageEl = document.createElement('div');
-    messageEl.className = 'message';
+    messageEl.className = isOwn ? 'message own-message' : 'message';
     const time = new Date().toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
     messageEl.innerHTML = `<span class="message-time">${time}</span> ${text}`;
     messagesDiv.appendChild(messageEl);

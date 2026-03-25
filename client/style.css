@@ -348,6 +348,17 @@ body {
     border-left: 6px solid var(--accent);
     word-wrap: break-word;
     box-shadow: 3px 3px 0 var(--shadow);
+    max-width: 70%;
+    align-self: flex-start;
+}
+
+.message.own-message {
+    align-self: flex-end;
+    background: var(--accent);
+    border-left: none;
+    border-right: 6px solid var(--border);
+    text-align: right;
+    color: #000000;
 }
 
 .message-time {
