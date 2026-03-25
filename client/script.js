@@ -9,13 +9,9 @@ document.documentElement.setAttribute('data-theme', savedTheme);
 
 // Wait for DOM to load
 document.addEventListener('DOMContentLoaded', () => {
-    // Initialize Socket.IO with proper URL
-    const socketUrl = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
-        ? 'http://localhost:3001'
-        : window.location.origin;
-    
-    console.log('Connecting to socket server:', socketUrl);
-    socket = io(socketUrl, {
+    // Initialize Socket.IO - connect to same origin
+    console.log('Connecting to socket server:', window.location.origin);
+    socket = io({
         transports: ['polling', 'websocket'],
         reconnection: true,
         reconnectionDelay: 1000,
