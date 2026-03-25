@@ -8,17 +8,12 @@ const app = express();
 const server = http.createServer(app);
 const io = socketIo(server, {
   cors: {
-    origin: ["http://localhost:3000", "http://127.0.0.1:3000"],
-    methods: ["GET", "POST"],
-    credentials: true
-  },
-  transports: ['websocket', 'polling']
+    origin: "*",
+    methods: ["GET", "POST"]
+  }
 });
 
-app.use(cors({
-  origin: ["http://localhost:3000", "http://127.0.0.1:3000"],
-  credentials: true
-}));
+app.use(cors());
 app.use(express.static(path.join(__dirname, '../client')));
 
 // Add a health check endpoint
