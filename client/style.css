@@ -87,6 +87,7 @@ body {
 .theme-toggle:hover {
     transform: translate(-2px, -2px);
     box-shadow: 6px 6px 0 var(--shadow);
+    background: var(--accent-dark);
 }
 
 .theme-toggle:active {
@@ -105,6 +106,8 @@ body {
     padding: 10px 20px;
     border: 3px solid var(--border);
     box-shadow: 4px 4px 0 var(--shadow);
+    font-family: 'Courier New', monospace;
+    font-weight: bold;
 }
 
 .main-content {
@@ -180,6 +183,7 @@ body {
 #load-video:hover {
     transform: translate(-2px, -2px);
     box-shadow: 6px 6px 0 var(--shadow);
+    background: var(--accent-dark);
 }
 
 #load-video:active {
@@ -258,6 +262,7 @@ body {
 #send-message:hover {
     transform: translate(-2px, -2px);
     box-shadow: 6px 6px 0 var(--shadow);
+    background: var(--accent-dark);
 }
 
 #send-message:active {
@@ -344,6 +349,14 @@ body {
     box-shadow: 6px 6px 0 var(--shadow);
 }
 
+#join-room:hover {
+    background: var(--accent-dark);
+}
+
+#create-room:hover {
+    background: var(--accent);
+}
+
 #join-room:active, #create-room:active {
     transform: translate(2px, 2px);
     box-shadow: 2px 2px 0 var(--shadow);
@@ -352,37 +365,33 @@ body {
 .message {
     background: var(--bg-card);
     padding: 10px 14px;
-    border: 2px solid var(--border);
+    border: 3px solid var(--border);
     font-size: 14px;
-    border-left: 6px solid var(--accent);
+    border-left: 8px solid var(--accent);
     word-wrap: break-word;
     box-shadow: 3px 3px 0 var(--shadow);
     max-width: 70%;
-    align-self: flex-start;
-}
-
-.message.own-message {
     align-self: flex-end;
-    background: var(--accent);
-    border-left: none;
-    border-right: 6px solid var(--border);
-    text-align: right;
-    color: #000000;
 }
 
 .message-time {
     font-size: 11px;
-    opacity: 0.8;
+    opacity: 1;
     margin-right: 8px;
-    color: var(--accent);
+    color: #000000;
     font-weight: bold;
+    background: var(--accent);
+    padding: 2px 8px;
+    border-radius: 3px;
 }
 
 .system-message {
     background: var(--accent);
-    border-left-color: var(--border);
+    border-left: 8px solid var(--border);
     font-weight: bold;
     color: #000000;
+    align-self: center;
+    max-width: 90%;
 }
 
 /* Mobile Styles */
