@@ -240,6 +240,7 @@ function onYouTubeIframeAPIReady() {
 function onPlayerReady(event) {
     console.log('YouTube player ready');
     playerReady = true;
+    addSystemMessage('✅ Player ready! You can now load videos.');
 }
 
 // Player state change handler
