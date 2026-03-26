@@ -2,6 +2,8 @@
 
 A real-time video synchronization platform that allows users to watch YouTube videos together in synchronized rooms with live chat.
 
+🚀 **[Live Demo](https://syncyt.onrender.com/)**
+
 ## Features
 
 - 🎥 **Synchronized Video Playback** - Watch YouTube videos in perfect sync with friends
@@ -51,11 +53,12 @@ If you prefer to run servers separately:
 
 ## Usage
 
-1. Open `http://localhost:3000` in your browser
+1. Visit **[https://syncyt.onrender.com/](https://syncyt.onrender.com/)** or open `http://localhost:3000` in your browser
 2. Create a new room or join an existing one with a room ID
 3. Paste a YouTube URL and click "Load Video"
 4. Share the room ID with friends to watch together
 5. Use the chat to communicate while watching
+6. Toggle between light and dark themes with the theme button
 
 ## How It Works
 
