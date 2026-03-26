@@ -8,7 +8,8 @@
     "server": "cd server && npm run dev",
     "client": "cd client && npm run dev",
     "start": "cd server && npm start",
-    "install-all": "npm install && cd server && npm install"
+    "install-all": "npm install && cd server && npm install",
+    "build": "cd server && npm install"
   },
   "keywords": ["video", "sync", "youtube", "chat", "realtime"],
   "author": "Aryan",
