@@ -2,6 +2,7 @@ let player = null;
 let currentRoom = null;
 let isUpdating = false;
 let socket = null;
+let playerReady = false;
 
 // Initialize theme
 const savedTheme = localStorage.getItem('theme') || 'light';
@@ -129,7 +130,23 @@ document.addEventListener('DOMContentLoaded', () => {
         const url = document.getElementById('youtube-url').value.trim();
         const videoId = getVideoId(url);
         
-        if (videoId && player) {
+        if (!videoId) {
+            addSystemMessage('⚠️ Invalid YouTube URL');
+            return;
+        }
+        
+        if (!playerReady) {
+            addSystemMessage('⚠️ Player not ready, please wait a moment...');
+            // Retry after 2 seconds
+            setTimeout(() => {
+                if (playerReady) {
+                    document.getElementById('load-video').click();
+                }
+            }, 2000);
+            return;
+        }
+        
+        try {
             player.loadVideoById(videoId);
             socket.emit('video-action', {
                 roomId: currentRoom,
@@ -138,8 +155,9 @@ document.addEventListener('DOMContentLoaded', () => {
                 currentTime: 0
             });
             addSystemMessage('🎉 Video loaded successfully!');
-        } else {
-            addSystemMessage('⚠️ Invalid YouTube URL');
+        } catch (error) {
+            console.error('Error loading video:', error);
+            addSystemMessage('⚠️ Error loading video');
         }
     });
     
@@ -209,12 +227,19 @@ function onYouTubeIframeAPIReady() {
         playerVars: {
             'playsinline': 1,
             'controls': 1,
-            'rel': 0
+            'rel': 0,
+            'origin': window.location.origin
         },
         events: {
-            'onStateChange': onPlayerStateChange
+            'onStateChange': onPlayerStateChange,
+            'onReady': onPlayerReady
         }
     });
+}
+
+function onPlayerReady(event) {
+    console.log('YouTube player ready');
+    playerReady = true;
 }
 
 // Player state change handler
@@ -247,9 +272,24 @@ function getVideoId(url = null) {
     if (!url && player && player.getVideoData) {
         return player.getVideoData().video_id;
     }
-    const regex = /(?:youtube\.com\/(?:[^\/]+\/.+\/|(?:v|e(?:mbed)?)\/|.*[?&]v=)|youtu\.be\/)([^"&?\/\s]{11})/;
-    const match = url.match(regex);
-    return match ? match[1] : null;
+    if (!url) return null;
+    
+    // Support multiple YouTube URL formats
+    const patterns = [
+        /(?:youtube\.com\/watch\?v=)([^&\s]+)/,
+        /(?:youtube\.com\/embed\/)([^?\s]+)/,
+        /(?:youtu\.be\/)([^?\s]+)/,
+        /(?:youtube\.com\/v\/)([^?\s]+)/
+    ];
+    
+    for (const pattern of patterns) {
+        const match = url.match(pattern);
+        if (match && match[1]) {
+            return match[1];
+        }
+    }
+    
+    return null;
 }
 
 
