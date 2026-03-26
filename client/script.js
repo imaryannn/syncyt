@@ -190,7 +190,7 @@ document.addEventListener('DOMContentLoaded', () => {
     });
     
     socket.on('chat-message', (data) => {
-        addMessage(data.message, false);
+        addMessage(data.message, data.userId, false);
     });
 });
 
@@ -279,12 +279,12 @@ function sendMessage() {
             message: message,
             userId: socket.id
         });
-        addMessage(message, true);
+        addMessage(message, socket.id, true);
         input.value = '';
     }
 }
 
-function addMessage(text, isOwn = true) {
+function addMessage(text, userId, isOwn = false) {
     const messagesDiv = document.getElementById('chat-messages');
     const messageEl = document.createElement('div');
     messageEl.className = isOwn ? 'message own-message' : 'message';

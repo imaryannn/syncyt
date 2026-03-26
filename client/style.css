@@ -371,7 +371,13 @@ body {
     word-wrap: break-word;
     box-shadow: 3px 3px 0 var(--shadow);
     max-width: 70%;
+    align-self: flex-start;
+}
+
+.message.own-message {
     align-self: flex-end;
+    border-left: none;
+    border-right: 8px solid var(--accent);
 }
 
 .message-time {
