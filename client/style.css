@@ -34,17 +34,13 @@ body {
     min-height: 100vh;
     color: var(--text-primary);
     transition: all 0.3s ease;
-    overflow: hidden;
 }
 
 .container {
     max-width: 1400px;
     margin: 0 auto;
     padding: 20px;
-    height: 100vh;
-    overflow: hidden;
-    display: flex;
-    flex-direction: column;
+    min-height: 100vh;
 }
 
 .header {
@@ -114,8 +110,7 @@ body {
     display: grid;
     grid-template-columns: 2fr 1fr;
     gap: 20px;
-    flex: 1;
-    overflow: hidden;
+    height: calc(100vh - 200px);
 }
 
 .video-section {
@@ -398,6 +393,18 @@ body {
     color: #000000;
     align-self: center;
     max-width: 90%;
+}
+
+.footer {
+    text-align: center;
+    padding: 15px;
+    background: var(--bg-card);
+    border: 3px solid var(--border);
+    margin-top: 20px;
+    box-shadow: 4px 4px 0 var(--shadow);
+    font-weight: bold;
+    font-size: 14px;
+    letter-spacing: 1px;
 }
 
 /* Mobile Styles */
